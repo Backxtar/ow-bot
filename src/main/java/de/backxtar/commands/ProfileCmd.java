@@ -2,6 +2,7 @@ package de.backxtar.commands;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import de.backxtar.OwBot;
 import de.backxtar.api.JSONReader;
 import de.backxtar.api.UserProfile;
 import de.backxtar.formatting.EmbedHelper;
@@ -14,6 +15,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,8 +26,9 @@ public class ProfileCmd implements CmdInterface {
     public void performCmd(SlashCommandInteractionEvent ctx) {
         List<OptionMapping> options = ctx.getInteraction().getOptionsByType(OptionType.STRING);
         final Type return_type = new TypeToken<UserProfile>() {}.getType();
+        EmbedHelper helper = new EmbedHelper();
         final Gson gson = new Gson();
-        UserProfile profile = null;
+        UserProfile profile;
 
         if (options.size() > 0) {
             String tag = options.get(0).getAsString();
@@ -33,18 +37,32 @@ public class ProfileCmd implements CmdInterface {
             try {
                 final JSONReader reader = new JSONReader("https://owapi.io/profile/pc/eu/" + tag);
                 profile = gson.fromJson(reader.getJSON(), return_type);
-            } catch (IOException ioe) {
-                return;
-            }
+            } catch (IOException ioe) { return; }
         } else {
-            //TODO: SQL
+            final String[] param = { "battletag" };
+            final Object[] values = { ctx.getUser().getIdLong() };
+            ResultSet rs = OwBot.getOwBot().getSqlManager().selectQuery(param, "user_battletags", "user_id = ?", values);
+            if (rs == null) return;
+
+            try {
+                EmbedBuilder builder = helper.standardBuilder();
+                if (!rs.next()) {
+                    builder.setDescription("<:no:1085863681503547432> *Kein Tag hinterlegt!*");
+                    ctx.replyEmbeds(builder.build())
+                            .queue();
+                    return;
+                }
+                String tag = rs.getString("battletag");
+                tag = tag.replace("#", "-");
+
+                final JSONReader reader = new JSONReader("https://owapi.io/profile/pc/eu/" + tag);
+                profile = gson.fromJson(reader.getJSON(), return_type);
+            } catch (SQLException | IOException ex) { return; }
         }
 
         if (profile == null || Objects.equals(profile.getMessage(), "Error: Profile not found")) {
-            EmbedHelper helper = new EmbedHelper();
             EmbedBuilder builder = helper.standardBuilder()
-                    .setDescription("❌ *Kein Profil gefunden!*");
-
+                    .setDescription("<:no:1085863681503547432> *Kein Profil gefunden!*");
             ctx.replyEmbeds(builder.build())
                     .queue();
             return;
@@ -79,44 +97,5 @@ public class ProfileCmd implements CmdInterface {
                 .addField("<:offense_icon:1085339430467948636> DPS", ranks[1], true)
                 .addField("<:support_icon:1085339429012512788> SUPPORT", ranks[2], true);
 
-    }
-
-    private EmbedBuilder createTankRankEmbed(final UserProfile profile) {
-        EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setDescription("**" + profile.getUsername() + "`s** Rang als `Tank`.");
-        try {
-            builder.setImage(profile.getCompetitive().getTank().getIcon());
-        } catch (Exception ex) {
-            builder.appendDescription("\n*Keine Werte verfürbar!*");
-            return builder;
-        }
-        return builder;
-    }
-
-    private EmbedBuilder createOffenseRankEmbed(final UserProfile profile) {
-        EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setDescription("**" + profile.getUsername() + "`s** Rang als `DPS`.");
-        try {
-            builder.setImage(profile.getCompetitive().getOffense().getIcon());
-        } catch (Exception ex) {
-            builder.appendDescription("\n*Keine Werte verfürbar!*");
-            return builder;
-        }
-        return builder;
-    }
-
-    private EmbedBuilder createSupportRankEmbed(final UserProfile profile) {
-        EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setDescription("**" + profile.getUsername() + "`s** Rang als `Support`.");
-        try {
-            builder.setImage(profile.getCompetitive().getSupport().getIcon());
-        } catch (Exception ex) {
-            builder.appendDescription("\n*Keine Werte verfürbar!*");
-            return builder;
-        }
-        return builder;
     }
 }

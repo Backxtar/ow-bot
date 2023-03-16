@@ -3,6 +3,7 @@ package de.backxtar.handlers;
 import de.backxtar.OwBot;
 import de.backxtar.commands.HelpCmd;
 import de.backxtar.commands.ProfileCmd;
+import de.backxtar.commands.TagCmd;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -27,6 +28,7 @@ public class CmdRegister {
     private void registerCmds() {
         saveToHashmap("help", "Zeigt die Hilfe an.", new HelpCmd());
         saveToHashmap("profile", "Zeigt Infos über den Account an./%t%", new ProfileCmd());
+        saveToHashmap("tag", "Speichert/aktualisiert dein Battletag.", new TagCmd());
     }
 
     private void saveToHashmap(

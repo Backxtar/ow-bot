@@ -1,5 +1,6 @@
 package de.backxtar;
 
+import de.backxtar.database.SQLManager;
 import de.backxtar.handlers.CmdRegister;
 import de.backxtar.handlers.EventDistributor;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -23,6 +24,8 @@ public class OwBot {
     private ShardManager shardManager;
     private CmdRegister cmdRegister;
 
+    private SQLManager sqlManager;
+
     /**
      * OW2 Constructor
      */
@@ -42,8 +45,9 @@ public class OwBot {
             this.logger.info("JDA initialisiert!");
             this.cmdRegister = new CmdRegister();
             this.logger.info("Commands registriert!");
+            this.sqlManager = new SQLManager("85.214.40.194", "ow2_bot", "ow2admin", "Ow2admin!");
         } catch (IllegalArgumentException iae) {
-            this.logger.error("JDA konnte nicht initialisiert werden!");
+            this.logger.error("Bot konnte nicht gestartet werden!");
         }
     }
 
@@ -98,5 +102,9 @@ public class OwBot {
      */
     public CmdRegister getCmdRegister() {
         return cmdRegister;
+    }
+
+    public SQLManager getSqlManager() {
+        return sqlManager;
     }
 }

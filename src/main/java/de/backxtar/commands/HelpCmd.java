@@ -20,7 +20,7 @@ public class HelpCmd implements CmdInterface {
                 .setDescription("Guude, ich bin eine künstliche Intelligenz, um Euch Informationen über **Overwatch 2** auszugeben!")
                 .addField("<:overwatch:1085346684223103106> WICHTIG", "Alle meine Commands sind Slash-Commands. Diese werden mit `/` in einem Channel ausgeführt! Mit `*` **gekennzeichnete Variablen** sind Pflicht!", false)
                 .addField("`/help`", "*Gibt die Bot-Hilfe aus*", true)
-                .addField("`/savetag *[gamertag]`", "*Speichert/aktualisiert dein Tag*", true)
+                .addField("`/tag`", "*Speichert/aktualisiert dein Tag*", true)
                 .addField("`profile [tag]`", "*Gibt Profilinformationen aus*", true);
     }
 }
