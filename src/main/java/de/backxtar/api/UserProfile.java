@@ -1,9 +1,13 @@
 package de.backxtar.api;
 
+import com.google.gson.annotations.SerializedName;
+
 public class UserProfile {
     private String username;
     private String portrait;
     private String endorsement;
+    @SerializedName("private")
+    private boolean isPrivate;
     private Games games;
     private Playtime playtime;
     private Competitive competitive;
@@ -20,6 +24,8 @@ public class UserProfile {
     public String getEndorsement() {
         return endorsement;
     }
+
+    public boolean getIsPrivate() { return isPrivate; }
 
     public Games getGames() {
         return games;

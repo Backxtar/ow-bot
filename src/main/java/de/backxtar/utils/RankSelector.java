@@ -5,9 +5,6 @@ import java.util.Objects;
 
 public class RankSelector {
     private final UserProfile profile;
-    private String tank_rank;
-    private String offense_rank;
-    private String support_rank;
 
     public RankSelector(final UserProfile profile) {
         this.profile = profile;
@@ -80,17 +77,5 @@ public class RankSelector {
 
     public UserProfile getProfile() {
         return this.profile;
-    }
-
-    public String getTank_rank() {
-        return this.tank_rank;
-    }
-
-    public String getOffense_rank() {
-        return this.offense_rank;
-    }
-
-    public String getSupport_rank() {
-        return this.support_rank;
     }
 }
