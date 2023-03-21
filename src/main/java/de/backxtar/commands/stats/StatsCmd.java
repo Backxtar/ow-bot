@@ -1,9 +1,10 @@
-package de.backxtar.commands;
+package de.backxtar.commands.stats;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import de.backxtar.OwBot;
 import de.backxtar.api.JSONReader;
+import de.backxtar.api.Cache;
 import de.backxtar.api.UserStats;
 import de.backxtar.formatting.EmbedHelper;
 import de.backxtar.handlers.CmdInterface;
@@ -12,6 +13,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -24,75 +27,101 @@ public class StatsCmd implements CmdInterface {
 
     @Override
     public void performCmd(SlashCommandInteractionEvent ctx) {
-        final EmbedHelper helper = new EmbedHelper();
-        final EmbedBuilder builder = helper.standardBuilder()
+        final EmbedHelper helper1 = new EmbedHelper(ctx.getGuild());
+        final EmbedHelper helper2 = new EmbedHelper();
+        final EmbedBuilder builder1 = helper2.standardBuilder()
                 .setDescription("<a:loading:1086206483609440286> *- Please wait...*");
 
-        ctx.replyEmbeds(builder.build())
-                .flatMap(mes -> mes.editOriginalEmbeds(makeEmbedChain(checkApi(ctx))))
+        ctx.replyEmbeds(builder1.build())
                 .queue();
+
+        final String tag = getTag(ctx);
+        if (tag == null) return;
+
+        UserStats stats;
+        if (Cache.getStatsByTag(tag) != null) stats = Cache.getStatsByTag(tag);
+        else {
+            stats = getStats(ctx, tag);
+            if (stats != null) Cache.addStats(stats, tag);
+            else return;
+        }
+
+        Button topHeroes = Button.secondary("heroes:" + tag + ":" + ctx.getUser().getIdLong(), "TOP HEROES");
+        Button comTitles = Button.secondary("comTitles:" + tag + ":" + ctx.getUser().getIdLong(), "COMBAT TITLES");
+        Button assTitles = Button.secondary("assTitles:" + tag + ":" + ctx.getUser().getIdLong(), "ASSIST TITLES");
+
+        final EmbedBuilder builder2 = helper1.standardBuilder()
+                .setTitle("Statanfrage von " + ctx.getUser().getName())
+                .setDescription("Hier eine Übersicht über **" + stats.getUsername() + "'s** Stats. Um Informationen zu bekommen, klicke auf die folgenden **Buttons**.")
+                .setThumbnail(stats.getPortrait());
+
+        ctx.getHook().editOriginalEmbeds(builder2.build())
+                .flatMap(mes -> mes.editMessageComponents(ActionRow.of(topHeroes, comTitles, assTitles)))
+                .queue();
+
+        /*Collection<MessageEmbed> embedsTotal = makeEmbedChain(checkApi(ctx));
+        int size = embedsTotal.size();
+
+        Collection<MessageEmbed> embedsPost1 = embedsTotal.stream().toList().subList(0, 10);
+        Collection<MessageEmbed> embedsPost2 = embedsTotal.stream().toList().subList(10, size);
+
+        ctx.getInteraction().getHook().editOriginalEmbeds(embedsPost1)
+                .flatMap(mes -> mes.getChannel().asTextChannel().sendMessageEmbeds(embedsPost2))
+                .queue();*/
     }
 
-    private EmbedBuilder[] checkApi(SlashCommandInteractionEvent ctx) {
+    private String getTag(SlashCommandInteractionEvent ctx) {
         List<OptionMapping> options = ctx.getInteraction().getOptionsByType(OptionType.STRING);
         final EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder();
-        EmbedBuilder[] builders;
-        final UserStats stats;
+        String tag;
 
         if (options.size() > 0) {
-            String tag = options.get(0).getAsString();
-            tag = tag.replace("#", "-");
-            stats = getUserStats(tag);
+            String tagTemp = options.get(0).getAsString();
+            tag = tagTemp.replace("#", "-");
         } else {
-            final String[] param = { "battletag" };
-            final Object[] values = { ctx.getUser().getIdLong() };
+            final String[] param = {"battletag"};
+            final Object[] values = {ctx.getUser().getIdLong()};
             ResultSet rs = OwBot.getOwBot().getSqlManager().selectQuery(param, "user_battletags", "user_id = ?", values);
+
             if (rs == null) {
-                builder.setDescription("<:no:1085863681503547432> *Datenbank ERROR!*");
-                builders = new EmbedBuilder[1];
-                builders[0] = builder;
-                return builders;
+                ctx.getHook().editOriginalEmbeds(helper.standardBuilder().setDescription("<:no:1085863681503547432> *Datenbank ERROR!*").build()).queue();
+                return null;
             }
 
             try {
                 if (!rs.next()) {
-                    builder.setDescription("<:no:1085863681503547432> *Kein Tag hinterlegt!*");
-                    builders = new EmbedBuilder[1];
-                    builders[0] = builder;
-                    return builders;
+                    ctx.getHook().editOriginalEmbeds(helper.standardBuilder().setDescription("<:no:1085863681503547432> *Kein Tag hinterlegt!*").build()).queue();
+                    return null;
                 }
-                String tag = rs.getString("battletag");
-                tag = tag.replace("#", "-");
-                stats = getUserStats(tag);
+                String tagTemp = rs.getString("battletag");
+                tag = tagTemp.replace("#", "-");
             } catch (SQLException sqlEx) {
-                builder.setDescription("<:no:1085863681503547432> *Datenbank ERROR!*");
-                builders = new EmbedBuilder[1];
-                builders[0] = builder;
-                return builders;
+                ctx.getHook().editOriginalEmbeds(helper.standardBuilder().setDescription("<:no:1085863681503547432> *Datenbank ERROR!*").build()).queue();
+                return null;
             }
         }
+        return tag;
+    }
+
+    private UserStats getStats(SlashCommandInteractionEvent ctx, final String tag) {
+        final EmbedHelper helper = new EmbedHelper();
+        final UserStats stats = getUserStats(tag);
 
         if (stats == null || Objects.equals(stats.getMessage(), "Error: Profile not found")) {
-            builder.setDescription("<:no:1085863681503547432> *Kein Profil gefunden!*");
-            builders = new EmbedBuilder[1];
-            builders[0] = builder;
-            return builders;
+            ctx.getHook().editOriginalEmbeds(helper.standardBuilder().setDescription("<:no:1085863681503547432> *Kein Profil gefunden!*").build()).queue();
+            return null;
         }
 
         if (stats.getIsPrivate()) {
-            builder.setDescription("<:no:1085863681503547432> *Das Profil ist privat!*");
-            builders = new EmbedBuilder[1];
-            builders[0] = builder;
-            return builders;
+            ctx.getHook().editOriginalEmbeds(helper.standardBuilder().setDescription("<:no:1085863681503547432> *Das Profil ist privat!*").build()).queue();
+            return null;
         }
-
-        builders = createInfoEmbeds(ctx, stats);
-        return builders;
+        return stats;
     }
 
     private UserStats getUserStats(final String tag) {
-        final Type return_type = new TypeToken<UserStats>() {}.getType();
+        final Type return_type = new TypeToken<UserStats>() {
+        }.getType();
         final Gson gson = new Gson();
 
         try {
@@ -129,8 +158,10 @@ public class StatsCmd implements CmdInterface {
         if (playedSizeComp > 1) builderList.add(getHeroEmbed(stats, 1, true));
         if (playedSizeComp > 2) builderList.add(getHeroEmbed(stats, 2, true));
 
-        //
+        // Combat Titles
         builderList.add(getCombatEmbed(stats));
+        // Assist Titles
+        builderList.add(getAssistEmbed(stats));
 
         EmbedBuilder[] builders = new EmbedBuilder[builderList.size()];
         builderList.toArray(builders);
@@ -141,7 +172,7 @@ public class StatsCmd implements CmdInterface {
         final EmbedHelper helper = new EmbedHelper();
         EmbedBuilder builder = helper.standardBuilder()
                 .setTitle("3️⃣ COMBAT TITLES")
-                .setDescription("Diese Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
+                .setDescription("Diese `COMBAT` Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
 
         int compLength = stats.getStats().getCombat().getCompetitive().length;
         int quickLength = stats.getStats().getCombat().getQuickplay().length;
@@ -160,6 +191,34 @@ public class StatsCmd implements CmdInterface {
             builder.addField(
                     "🔸" + stats.getStats().getCombat().getCompetitive()[i].getTitle(),
                     "\uD83D\uDD39`" + stats.getStats().getCombat().getCompetitive()[i].getValue() + "`",
+                    true);
+        }
+        return builder;
+    }
+
+    private EmbedBuilder getAssistEmbed(final UserStats stats) {
+        final EmbedHelper helper = new EmbedHelper();
+        EmbedBuilder builder = helper.standardBuilder()
+                .setTitle("4️⃣ ASSIST TITLES")
+                .setDescription("Diese `ASSIST` Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
+
+        int compLength = stats.getStats().getAssists().getCompetitive().length;
+        int quickLength = stats.getStats().getAssists().getQuickplay().length;
+
+        if (quickLength > 0) builder.addBlankField(false);
+        for (int i = 0; i < quickLength; i++) {
+            if (i == 0) builder.addField("🔻MODUS: Quickplay", "", false);
+            builder.addField(
+                    "🔸" + stats.getStats().getAssists().getQuickplay()[i].getTitle(),
+                    "\uD83D\uDD39`" + stats.getStats().getAssists().getQuickplay()[i].getValue() + "`",
+                    true);
+        }
+        if (compLength > 0) builder.addBlankField(false);
+        for (int i = 0; i < compLength; i++) {
+            if (i == 0) builder.addField("🔻MODUS: Competitive", "", false);
+            builder.addField(
+                    "🔸" + stats.getStats().getAssists().getCompetitive()[i].getTitle(),
+                    "\uD83D\uDD39`" + stats.getStats().getAssists().getCompetitive()[i].getValue() + "`",
                     true);
         }
         return builder;

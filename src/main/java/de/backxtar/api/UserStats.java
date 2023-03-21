@@ -3,6 +3,7 @@ package de.backxtar.api;
 import com.google.gson.annotations.SerializedName;
 
 public class UserStats {
+    private String tag;
     private String username;
     private String portrait;
     private String endorsement;
@@ -10,7 +11,15 @@ public class UserStats {
     private boolean isPrivate;
     private Stats stats;
     private String message;
+    private long timestamp;
 
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
     public String getUsername() {
         return username;
     }
@@ -33,6 +42,13 @@ public class UserStats {
 
     public String getMessage() {
         return message;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public class Stats {

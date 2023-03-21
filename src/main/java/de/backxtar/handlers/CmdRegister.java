@@ -3,7 +3,7 @@ package de.backxtar.handlers;
 import de.backxtar.OwBot;
 import de.backxtar.commands.HelpCmd;
 import de.backxtar.commands.ProfileCmd;
-import de.backxtar.commands.StatsCmd;
+import de.backxtar.commands.stats.StatsCmd;
 import de.backxtar.commands.TagCmd;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;

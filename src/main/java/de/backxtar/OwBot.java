@@ -3,6 +3,7 @@ package de.backxtar;
 import de.backxtar.database.SQLManager;
 import de.backxtar.handlers.CmdRegister;
 import de.backxtar.handlers.EventDistributor;
+import de.backxtar.threads.BackgroundTasks;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -23,8 +24,8 @@ public class OwBot {
     private final Logger logger;
     private ShardManager shardManager;
     private CmdRegister cmdRegister;
-
     private SQLManager sqlManager;
+    private final BackgroundTasks tasks;
 
     /**
      * OW2 Constructor
@@ -34,6 +35,8 @@ public class OwBot {
         logger = LoggerFactory.getLogger(OwBot.class);
 
         initHandlers();
+        this.tasks = new BackgroundTasks();
+        this.tasks.runThreads();
     }
 
     /**
@@ -106,5 +109,9 @@ public class OwBot {
 
     public SQLManager getSqlManager() {
         return sqlManager;
+    }
+
+    public BackgroundTasks getTasks() {
+        return tasks;
     }
 }
