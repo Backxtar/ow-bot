@@ -61,6 +61,7 @@ public class StatsInteraction {
     private EmbedBuilder getAssistEmbed(final UserStats stats) {
         final EmbedHelper helper = new EmbedHelper();
         EmbedBuilder builder = helper.standardBuilder()
+                .setThumbnail(stats.getPortrait())
                 .setTitle("ASSIST TITLES")
                 .setDescription("Diese **ASSIST** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
 
@@ -89,6 +90,7 @@ public class StatsInteraction {
     private EmbedBuilder getCombatEmbed(final UserStats stats) {
         final EmbedHelper helper = new EmbedHelper();
         EmbedBuilder builder = helper.standardBuilder()
+                .setThumbnail(stats.getPortrait())
                 .setTitle("COMBAT TITLES")
                 .setDescription("Diese **COMBAT** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
 
