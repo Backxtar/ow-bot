@@ -9,7 +9,6 @@ import de.backxtar.api.UserStats;
 import de.backxtar.formatting.EmbedHelper;
 import de.backxtar.handlers.CmdInterface;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -21,7 +20,6 @@ import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class StatsCmd implements CmdInterface {
 
@@ -58,16 +56,6 @@ public class StatsCmd implements CmdInterface {
         ctx.getHook().editOriginalEmbeds(builder2.build())
                 .flatMap(mes -> mes.editMessageComponents(ActionRow.of(topHeroes, comTitles, assTitles)))
                 .queue();
-
-        /*Collection<MessageEmbed> embedsTotal = makeEmbedChain(checkApi(ctx));
-        int size = embedsTotal.size();
-
-        Collection<MessageEmbed> embedsPost1 = embedsTotal.stream().toList().subList(0, 10);
-        Collection<MessageEmbed> embedsPost2 = embedsTotal.stream().toList().subList(10, size);
-
-        ctx.getInteraction().getHook().editOriginalEmbeds(embedsPost1)
-                .flatMap(mes -> mes.getChannel().asTextChannel().sendMessageEmbeds(embedsPost2))
-                .queue();*/
     }
 
     private String getTag(SlashCommandInteractionEvent ctx) {
@@ -130,129 +118,5 @@ public class StatsCmd implements CmdInterface {
         } catch (IOException ioe) {
             return null;
         }
-    }
-
-    private EmbedBuilder[] createInfoEmbeds(SlashCommandInteractionEvent ctx, final UserStats stats) {
-        final EmbedHelper helper = new EmbedHelper(ctx.getGuild()), helper2 = new EmbedHelper();
-        List<EmbedBuilder> builderList = new ArrayList<>();
-
-        builderList.add(helper.standardBuilder()
-                .setTitle("Statanfrage von " + ctx.getUser().getName())
-                .setDescription("Hier eine Übersicht über **" + stats.getUsername() + "'s** Stats")
-                .setThumbnail(stats.getPortrait()));
-
-        // TOP Heroes played
-        int playedSize = stats.getStats().getTop_heroes().getQuickplay().getPlayed().length;
-        if (playedSize > 0) {
-            builderList.add(helper2.standardBuilder().setTitle("1️⃣ Top Heroes: Quickplay"));
-            builderList.add(getHeroEmbed(stats, 0, false));
-        }
-        if (playedSize > 1) builderList.add(getHeroEmbed(stats, 1, false));
-        if (playedSize > 2) builderList.add(getHeroEmbed(stats, 2, false));
-
-        int playedSizeComp = stats.getStats().getTop_heroes().getCompetitive().getPlayed().length;
-        if (playedSizeComp > 0) {
-            builderList.add(helper2.standardBuilder().setTitle("2️⃣ TOP HEROES: Competitive"));
-            builderList.add(getHeroEmbed(stats, 0, true));
-        }
-        if (playedSizeComp > 1) builderList.add(getHeroEmbed(stats, 1, true));
-        if (playedSizeComp > 2) builderList.add(getHeroEmbed(stats, 2, true));
-
-        // Combat Titles
-        builderList.add(getCombatEmbed(stats));
-        // Assist Titles
-        builderList.add(getAssistEmbed(stats));
-
-        EmbedBuilder[] builders = new EmbedBuilder[builderList.size()];
-        builderList.toArray(builders);
-        return builders;
-    }
-
-    private EmbedBuilder getCombatEmbed(final UserStats stats) {
-        final EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setTitle("3️⃣ COMBAT TITLES")
-                .setDescription("Diese `COMBAT` Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
-
-        int compLength = stats.getStats().getCombat().getCompetitive().length;
-        int quickLength = stats.getStats().getCombat().getQuickplay().length;
-
-        if (quickLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Quickplay", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getCombat().getQuickplay()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getCombat().getQuickplay()[i].getValue() + "`",
-                    true);
-        }
-        if (compLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Competitive", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getCombat().getCompetitive()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getCombat().getCompetitive()[i].getValue() + "`",
-                    true);
-        }
-        return builder;
-    }
-
-    private EmbedBuilder getAssistEmbed(final UserStats stats) {
-        final EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setTitle("4️⃣ ASSIST TITLES")
-                .setDescription("Diese `ASSIST` Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
-
-        int compLength = stats.getStats().getAssists().getCompetitive().length;
-        int quickLength = stats.getStats().getAssists().getQuickplay().length;
-
-        if (quickLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Quickplay", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getAssists().getQuickplay()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getAssists().getQuickplay()[i].getValue() + "`",
-                    true);
-        }
-        if (compLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Competitive", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getAssists().getCompetitive()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getAssists().getCompetitive()[i].getValue() + "`",
-                    true);
-        }
-        return builder;
-    }
-
-    private EmbedBuilder getHeroEmbed(final UserStats stats,
-                                      final int pos,
-                                      final boolean competitive) {
-        final EmbedHelper helper = new EmbedHelper();
-
-        final String play = switch (pos) {
-            case 0 -> "meisten";
-            case 1 -> "zweit meisten";
-            case 2 -> "dritt meisten";
-            default -> "";
-        };
-        final String mode = competitive ? "🔸Competitive" : "🔸Quickplay";
-
-        final UserStats.Played tmp;
-        if (competitive) tmp = stats.getStats().getTop_heroes().getCompetitive().getPlayed()[pos];
-        else tmp = stats.getStats().getTop_heroes().getQuickplay().getPlayed()[pos];
-
-        return helper.standardBuilder()
-                .setTitle(tmp.getHero())
-                .setThumbnail(tmp.getImg())
-                .setDescription("Dieser Held wurde von **" + stats.getUsername() + "** am " + play + " gespielt.")
-                .addField("🔻MODUS", mode, true)
-                .addField("🔻SPIELZEIT", "🔸`" + tmp.getPlayed() + "`", true);
-    }
-
-    private Collection<MessageEmbed> makeEmbedChain(EmbedBuilder[] builders) {
-        MessageEmbed[] embeds = new MessageEmbed[builders.length];
-        for (int i = 0; i < embeds.length; i++)
-            embeds[i] = builders[i].build();
-        return Arrays.stream(embeds).collect(Collectors.toList());
     }
 }

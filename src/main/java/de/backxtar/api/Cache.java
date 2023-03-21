@@ -1,9 +1,6 @@
 package de.backxtar.api;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Cache {
     private static HashMap<String, UserStats> statCache = new HashMap<>();
@@ -18,12 +15,16 @@ public class Cache {
     }
 
     public static void deleteCache() {
-        List<String> tags = new ArrayList<>();
+        Set<String> tags = new HashSet<>();
 
         for (Map.Entry<String, UserStats> entry : statCache.entrySet()) {
-            if ((System.currentTimeMillis() - 300000) >= entry.getValue().getTimestamp())
+            if ((System.currentTimeMillis() - (60000 * 5)) >= entry.getValue().getTimestamp())
                 tags.add(entry.getKey());
         }
-        tags.forEach(tag -> statCache.remove(tag));
+        statCache.keySet().removeAll(tags);
+    }
+
+    public static HashMap<String, UserStats> getStatCache() {
+        return statCache;
     }
 }

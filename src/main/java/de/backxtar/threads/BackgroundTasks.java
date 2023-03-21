@@ -32,11 +32,11 @@ public class BackgroundTasks {
                 }
                 if (current >= fiveMinutes + (1000 * 60 * 5)) {
                     fiveMinutes = System.currentTimeMillis();
-                    Cache.deleteCache();
                     System.gc();
                 }
                 if (current >= oneMinute + (1000 * 60)) {
                     oneMinute = System.currentTimeMillis();
+                    Cache.deleteCache();
                 }
             }
         });
