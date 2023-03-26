@@ -12,6 +12,7 @@ public class UserProfile {
     private Playtime playtime;
     private Competitive competitive;
     private String message;
+    private long timestamp;
 
     public String getUsername() {
         return username;
@@ -41,6 +42,14 @@ public class UserProfile {
 
     public String getMessage() {
         return message;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public class Games {
