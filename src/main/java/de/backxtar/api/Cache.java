@@ -25,19 +25,23 @@ public class Cache {
     }
 
     public static void deleteCache() {
-        Set<String> statTags = new HashSet<>();
-        Set<String> profTags = new HashSet<>();
+        if (!statCache.isEmpty()) {
+            Set<String> statTags = new HashSet<>();
+            for (Map.Entry<String, UserStats> entry : statCache.entrySet()) {
+                if ((System.currentTimeMillis() - (60000 * 5)) >= entry.getValue().getTimestamp())
+                    statTags.add(entry.getKey());
+            }
+            statCache.keySet().removeAll(statTags);
+        }
 
-        for (Map.Entry<String, UserStats> entry : statCache.entrySet()) {
-            if ((System.currentTimeMillis() - (60000 * 5)) >= entry.getValue().getTimestamp())
-                statTags.add(entry.getKey());
+        if (!profCache.isEmpty()) {
+            Set<String> profTags = new HashSet<>();
+            for (Map.Entry<String, UserProfile> entry : profCache.entrySet()) {
+                if ((System.currentTimeMillis() - (60000 * 5)) >= entry.getValue().getTimestamp())
+                    profTags.add(entry.getKey());
+            }
+            profCache.keySet().removeAll(profTags);
         }
-        for (Map.Entry<String, UserProfile> entry : profCache.entrySet()) {
-            if ((System.currentTimeMillis() - (60000 * 5)) >= entry.getValue().getTimestamp())
-                profTags.add(entry.getKey());
-        }
-        statCache.keySet().removeAll(statTags);
-        profCache.keySet().removeAll(profTags);
     }
 
     public static HashMap<String, UserStats> getStatCache() {
