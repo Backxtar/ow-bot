@@ -34,6 +34,11 @@ public class StatsInteraction {
 
     public void runAction() {
         final UserStats stats = Cache.getStatsByTag(this.tag);
+        if (stats == null) {
+            ctx.deferEdit().queue();
+            return;
+        }
+
         Collection<MessageEmbed> embeds = new ArrayList<>();
 
         if (Objects.equals(this.action, "heroes")) {
