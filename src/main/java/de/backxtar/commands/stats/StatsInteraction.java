@@ -32,6 +32,10 @@ public class StatsInteraction {
         return this.action != null && this.tag != null && this.userId != 0L;
     }
 
+    public boolean checkUser() {
+        return this.userId == this.ctx.getUser().getIdLong();
+    }
+
     public void runAction() {
         final UserStats stats = Cache.getStatsByTag(this.tag);
         if (stats == null) {
@@ -60,7 +64,39 @@ public class StatsInteraction {
         if (Objects.equals(this.action, "assTitles"))
             embeds.add(getAssistEmbed(stats).build());
 
+        if (Objects.equals(this.action, "bestTitles"))
+            embeds.add(getBestEmbed(stats).build());
+
         this.ctx.replyEmbeds(embeds).queue();
+    }
+
+    private EmbedBuilder getBestEmbed(final UserStats stats) {
+        final EmbedHelper helper = new EmbedHelper();
+        EmbedBuilder builder = helper.standardBuilder()
+                .setThumbnail(stats.getPortrait())
+                .setTitle("AVERAGE STATS")
+                .setDescription("Das sind die **besten Stats**, die " + stats.getUsername() + " bisher erreicht hat.");
+        
+        int compLength = stats.getStats().getBest().getCompetitive().length;
+        int quickLength = stats.getStats().getBest().getQuickplay().length;
+
+        if (quickLength > 0) builder.addBlankField(false);
+        for (int i = 0; i < quickLength; i++) {
+            if (i == 0) builder.addField("🔻Quickplay", "", false);
+            builder.addField(
+                    "🔸" + stats.getStats().getBest().getQuickplay()[i].getTitle(),
+                    "\uD83D\uDD39`" + stats.getStats().getBest().getQuickplay()[i].getValue() + "`",
+                    true);
+        }
+        if (compLength > 0) builder.addBlankField(false);
+        for (int i = 0; i < compLength; i++) {
+            if (i == 0) builder.addField("🔻Competitive", "", false);
+            builder.addField(
+                    "🔸" + stats.getStats().getBest().getCompetitive()[i].getTitle(),
+                    "\uD83D\uDD39`" + stats.getStats().getBest().getCompetitive()[i].getValue() + "`",
+                    true);
+        }
+        return builder;
     }
 
     private EmbedBuilder getAssistEmbed(final UserStats stats) {
@@ -75,7 +111,7 @@ public class StatsInteraction {
 
         if (quickLength > 0) builder.addBlankField(false);
         for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Quickplay", "", false);
+            if (i == 0) builder.addField("🔻Quickplay", "", false);
             builder.addField(
                     "🔸" + stats.getStats().getAssists().getQuickplay()[i].getTitle(),
                     "\uD83D\uDD39`" + stats.getStats().getAssists().getQuickplay()[i].getValue() + "`",
@@ -83,7 +119,7 @@ public class StatsInteraction {
         }
         if (compLength > 0) builder.addBlankField(false);
         for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Competitive", "", false);
+            if (i == 0) builder.addField("🔻Competitive", "", false);
             builder.addField(
                     "🔸" + stats.getStats().getAssists().getCompetitive()[i].getTitle(),
                     "\uD83D\uDD39`" + stats.getStats().getAssists().getCompetitive()[i].getValue() + "`",
@@ -104,7 +140,7 @@ public class StatsInteraction {
 
         if (quickLength > 0) builder.addBlankField(false);
         for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Quickplay", "", false);
+            if (i == 0) builder.addField("🔻Quickplay", "", false);
             builder.addField(
                     "🔸" + stats.getStats().getCombat().getQuickplay()[i].getTitle(),
                     "\uD83D\uDD39`" + stats.getStats().getCombat().getQuickplay()[i].getValue() + "`",
@@ -112,7 +148,7 @@ public class StatsInteraction {
         }
         if (compLength > 0) builder.addBlankField(false);
         for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻MODUS: Competitive", "", false);
+            if (i == 0) builder.addField("🔻Competitive", "", false);
             builder.addField(
                     "🔸" + stats.getStats().getCombat().getCompetitive()[i].getTitle(),
                     "\uD83D\uDD39`" + stats.getStats().getCombat().getCompetitive()[i].getValue() + "`",
@@ -120,6 +156,8 @@ public class StatsInteraction {
         }
         return builder;
     }
+
+
 
     private EmbedBuilder getHeroEmbed(final UserStats stats,
                                       final int pos,
