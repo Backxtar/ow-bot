@@ -1,7 +1,6 @@
 package de.backxtar.utils;
 
 import de.backxtar.api.UserProfile;
-import java.util.Objects;
 
 public class RankSelector {
     private final UserProfile profile;

@@ -25,7 +25,7 @@ public class EventDistributor extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent ctx) {
         StatsInteraction interaction = new StatsInteraction(ctx, ctx.getButton().getId());
-        if (interaction.filterAction())
-            interaction.runAction();
+        if (interaction.filterAction() && interaction.checkUser()) interaction.runAction();
+        else ctx.deferEdit().queue();
     }
 }

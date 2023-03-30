@@ -1,6 +1,5 @@
 package de.backxtar.commands;
 
-import de.backxtar.api.UserStats;
 import de.backxtar.formatting.EmbedHelper;
 import de.backxtar.handlers.CmdInterface;
 import net.dv8tion.jda.api.EmbedBuilder;
