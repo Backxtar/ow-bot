@@ -48,7 +48,7 @@ public class OwBot {
             this.logger.info("JDA initialisiert!");
             this.cmdRegister = new CmdRegister();
             this.logger.info("Commands registriert!");
-            this.sqlManager = new SQLManager("85.214.40.194", "ow2_bot", "ow2admin", "Ow2admin!");
+            this.sqlManager = new SQLManager(Constants.dbHost, "ow2_bot", Constants.dbUser, Constants.dbPasswd);
         } catch (IllegalArgumentException iae) {
             this.logger.error("Bot konnte nicht gestartet werden!");
         }
@@ -72,7 +72,7 @@ public class OwBot {
                         GatewayIntent.SCHEDULED_EVENTS)
 
                 /* CONFIG */
-                .setToken("MTA4NTIxNDg3MjI3NjU2NjExOA.GSn5TD.R49tfhIc735uJX-JzEnZeNIF0pCVu3A_gF2ong")
+                .setToken(Constants.token)
                 .setStatus(OnlineStatus.ONLINE)
                 .setActivity(Activity.playing("Overwatch 2"))
                 .setAutoReconnect(true)

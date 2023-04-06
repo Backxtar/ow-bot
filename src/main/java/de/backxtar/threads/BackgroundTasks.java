@@ -1,5 +1,6 @@
 package de.backxtar.threads;
 
+import de.backxtar.threads.UpdateCheck;
 import de.backxtar.OwBot;
 import de.backxtar.api.Cache;
 
@@ -29,6 +30,7 @@ public class BackgroundTasks {
 
                 if (current >= fifteenMinutes + (1000 * 60 * 15)) {
                     fifteenMinutes = System.currentTimeMillis();
+                    UpdateCheck.checkPatchNotes();
                 }
                 if (current >= fiveMinutes + (1000 * 60 * 5)) {
                     fiveMinutes = System.currentTimeMillis();

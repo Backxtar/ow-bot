@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class StatsInteraction {
@@ -17,6 +19,17 @@ public class StatsInteraction {
     private String action;
     private String tag;
     private long userId = 0L;
+
+    enum Destination {
+        COMBAT,
+        ASSIST,
+        BEST
+    }
+
+    enum Mode {
+        QUICKPLAY,
+        COMPETITIVE
+    }
 
     public StatsInteraction(ButtonInteractionEvent ctx, final String id) {
         this.ctx = ctx;
@@ -49,119 +62,123 @@ public class StatsInteraction {
             int sizeQuick = stats.getStats().getTop_heroes().getQuickplay().getPlayed().length;
             int sizeComp = stats.getStats().getTop_heroes().getCompetitive().getPlayed().length;
 
-            if (sizeQuick > 0) embeds.add(getHeroEmbed(stats, 0, false).build());
-            if (sizeQuick > 1) embeds.add(getHeroEmbed(stats, 1, false).build());
-            if (sizeQuick > 2) embeds.add(getHeroEmbed(stats, 2, false).build());
+            if (sizeQuick > 0) embeds.add(getHeroEmbed(stats, 0, Mode.QUICKPLAY).build());
+            if (sizeQuick > 1) embeds.add(getHeroEmbed(stats, 1, Mode.QUICKPLAY).build());
+            if (sizeQuick > 2) embeds.add(getHeroEmbed(stats, 2, Mode.QUICKPLAY).build());
 
-            if (sizeComp > 0) embeds.add(getHeroEmbed(stats, 0, true).build());
-            if (sizeQuick > 1) embeds.add(getHeroEmbed(stats, 1, true).build());
-            if (sizeQuick > 2) embeds.add(getHeroEmbed(stats, 2, true).build());
+            if (sizeComp > 0) embeds.add(getHeroEmbed(stats, 0, Mode.COMPETITIVE).build());
+            if (sizeQuick > 1) embeds.add(getHeroEmbed(stats, 1, Mode.COMPETITIVE).build());
+            if (sizeQuick > 2) embeds.add(getHeroEmbed(stats, 2, Mode.COMPETITIVE).build());
         }
 
         if (Objects.equals(this.action, "comTitles"))
-            embeds.add(getCombatEmbed(stats).build());
+            embeds.add(buildEmbed(stats, 
+                                  "COMBAT TITLES", 
+                                  "Diese **COMBAT** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.", 
+                                  Destination.COMBAT).build());
 
         if (Objects.equals(this.action, "assTitles"))
-            embeds.add(getAssistEmbed(stats).build());
+            embeds.add(buildEmbed(stats, 
+                                  "ASSIST TITLES", 
+                                  "Diese **ASSIST** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.", 
+                                  Destination.ASSIST).build());
 
         if (Objects.equals(this.action, "bestTitles"))
-            embeds.add(getBestEmbed(stats).build());
+            embeds.add(buildEmbed(stats, 
+                                  "AVERAGE STATS", 
+                                  "Das sind die **besten Stats**, die " + stats.getUsername() + " bisher erreicht hat.", 
+                                  Destination.BEST).build());
 
         this.ctx.replyEmbeds(embeds).queue();
     }
 
-    private EmbedBuilder getBestEmbed(final UserStats stats) {
+    private EmbedBuilder buildEmbed(final UserStats stats, 
+                                    final String title,
+                                    final String desc, 
+                                    final Destination dest) {
         final EmbedHelper helper = new EmbedHelper();
         EmbedBuilder builder = helper.standardBuilder()
                 .setThumbnail(stats.getPortrait())
-                .setTitle("AVERAGE STATS")
-                .setDescription("Das sind die **besten Stats**, die " + stats.getUsername() + " bisher erreicht hat.");
-        
-        int compLength = stats.getStats().getBest().getCompetitive().length;
-        int quickLength = stats.getStats().getBest().getQuickplay().length;
+                .setTitle(title)
+                .setDescription(desc);
 
-        if (quickLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻Quickplay", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getBest().getQuickplay()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getBest().getQuickplay()[i].getValue() + "`",
-                    true);
+        int quickLength = 0, compLength = 0;
+        if (dest == Destination.BEST) {
+            quickLength = stats.getStats().getBest().getQuickplay().length;
+            compLength = stats.getStats().getBest().getCompetitive().length;
         }
-        if (compLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻Competitive", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getBest().getCompetitive()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getBest().getCompetitive()[i].getValue() + "`",
-                    true);
+
+        if (dest == Destination.COMBAT) {
+            quickLength = stats.getStats().getCombat().getQuickplay().length;
+            compLength = stats.getStats().getCombat().getCompetitive().length;
         }
-        return builder;
+
+        if (dest == Destination.ASSIST) {
+            quickLength = stats.getStats().getAssists().getQuickplay().length;
+            compLength = stats.getStats().getAssists().getCompetitive().length;
+        }
+
+        HashMap<String, String> quickplay = new HashMap<>();
+        HashMap<String, String> competitive = new HashMap<>();
+        if (quickLength > 0) quickplay = buildMap(stats, quickLength, dest, Mode.QUICKPLAY);
+        if (compLength > 0) competitive = buildMap(stats, compLength, dest, Mode.COMPETITIVE);
+
+        if (quickplay.size() > 0) {
+            builder.addBlankField(false);
+            builder.addField("🔻Quickplay", "", false);
+
+            for (Map.Entry<String, String> entry : quickplay.entrySet())
+                builder.addField(entry.getKey(), entry.getValue(), true);
+        }
+
+        if (competitive.size() > 0) {
+            builder.addBlankField(false);
+            builder.addField("🔻Competitive", "", false);
+
+            for (Map.Entry<String, String> entry : competitive.entrySet())
+                builder.addField(entry.getKey(), entry.getValue(), true);
+        }
+
+        if (builder.getFields().size() > 0) return builder;
+        else return null;
     }
 
-    private EmbedBuilder getAssistEmbed(final UserStats stats) {
-        final EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setThumbnail(stats.getPortrait())
-                .setTitle("ASSIST TITLES")
-                .setDescription("Diese **ASSIST** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
+    private HashMap<String, String> buildMap(final UserStats stats, 
+                                             final int length, 
+                                             Destination dest, 
+                                             Mode mode) {
+        HashMap<String, String> keyValue = new HashMap<>();
 
-        int compLength = stats.getStats().getAssists().getCompetitive().length;
-        int quickLength = stats.getStats().getAssists().getQuickplay().length;
-
-        if (quickLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻Quickplay", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getAssists().getQuickplay()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getAssists().getQuickplay()[i].getValue() + "`",
-                    true);
+        for (int i = 0; i < length; i++) {
+            if (dest == Destination.BEST) {
+                if (mode == Mode.QUICKPLAY) 
+                    keyValue.put("🔸" + stats.getStats().getBest().getQuickplay()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getBest().getQuickplay()[i].getValue() + "`");
+                else keyValue.put(stats.getStats().getBest().getCompetitive()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getBest().getCompetitive()[i].getValue() + "`");
+            }
+            if (dest == Destination.COMBAT) {
+                if (mode == Mode.QUICKPLAY) 
+                    keyValue.put("🔸" + stats.getStats().getCombat().getQuickplay()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getCombat().getQuickplay()[i].getValue() + "`");
+                else keyValue.put(stats.getStats().getCombat().getCompetitive()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getCombat().getCompetitive()[i].getValue() + "`");
+            }
+            if (dest == Destination.ASSIST) {
+                if (mode == Mode.QUICKPLAY) 
+                    keyValue.put("🔸" + stats.getStats().getAssists().getQuickplay()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getAssists().getQuickplay()[i].getValue() + "`");
+                else keyValue.put(stats.getStats().getAssists().getCompetitive()[i].getTitle(), 
+                    "\uD83D\uDD39`" + stats.getStats().getAssists().getCompetitive()[i].getValue() + "`");
+            }
         }
-        if (compLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻Competitive", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getAssists().getCompetitive()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getAssists().getCompetitive()[i].getValue() + "`",
-                    true);
-        }
-        return builder;
+        return keyValue;
     }
 
-    private EmbedBuilder getCombatEmbed(final UserStats stats) {
-        final EmbedHelper helper = new EmbedHelper();
-        EmbedBuilder builder = helper.standardBuilder()
-                .setThumbnail(stats.getPortrait())
-                .setTitle("COMBAT TITLES")
-                .setDescription("Diese **COMBAT** Erfolge hat **" + stats.getUsername() + "** bisher erreicht.");
-
-        int compLength = stats.getStats().getCombat().getCompetitive().length;
-        int quickLength = stats.getStats().getCombat().getQuickplay().length;
-
-        if (quickLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < quickLength; i++) {
-            if (i == 0) builder.addField("🔻Quickplay", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getCombat().getQuickplay()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getCombat().getQuickplay()[i].getValue() + "`",
-                    true);
-        }
-        if (compLength > 0) builder.addBlankField(false);
-        for (int i = 0; i < compLength; i++) {
-            if (i == 0) builder.addField("🔻Competitive", "", false);
-            builder.addField(
-                    "🔸" + stats.getStats().getCombat().getCompetitive()[i].getTitle(),
-                    "\uD83D\uDD39`" + stats.getStats().getCombat().getCompetitive()[i].getValue() + "`",
-                    true);
-        }
-        return builder;
-    }
-
-
-
+    //TODO: Make Hero Embeds variable
     private EmbedBuilder getHeroEmbed(final UserStats stats,
                                       final int pos,
-                                      final boolean competitive) {
+                                      final Mode m) {
         final EmbedHelper helper = new EmbedHelper();
 
         final String play = switch (pos) {
@@ -170,10 +187,10 @@ public class StatsInteraction {
             case 2 -> "dritt meisten";
             default -> "";
         };
-        final String mode = competitive ? "🔸Competitive" : "🔸Quickplay";
+        final String mode = m == Mode.COMPETITIVE ? "🔸Competitive" : "🔸Quickplay";
 
         final UserStats.Played tmp;
-        if (competitive) tmp = stats.getStats().getTop_heroes().getCompetitive().getPlayed()[pos];
+        if (m == Mode.COMPETITIVE) tmp = stats.getStats().getTop_heroes().getCompetitive().getPlayed()[pos];
         else tmp = stats.getStats().getTop_heroes().getQuickplay().getPlayed()[pos];
 
         return helper.standardBuilder()

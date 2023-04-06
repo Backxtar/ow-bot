@@ -5,6 +5,7 @@ import de.backxtar.commands.HelpCmd;
 import de.backxtar.commands.ProfileCmd;
 import de.backxtar.commands.stats.StatsCmd;
 import de.backxtar.commands.TagCmd;
+import de.backxtar.commands.UpdateCmd;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -31,6 +32,7 @@ public class CmdRegister {
         saveToHashmap("profile", "Zeigt Infos über den Account an./%t%", new ProfileCmd());
         saveToHashmap("stats", "Zeigt Infos über die Account-Stats an./%t%", new StatsCmd());
         saveToHashmap("tag", "Speichert/aktualisiert dein Battletag.", new TagCmd());
+        saveToHashmap("update", "Gibt die neusten Updates von OW2 aus.", new UpdateCmd());
     }
 
     private void saveToHashmap(
