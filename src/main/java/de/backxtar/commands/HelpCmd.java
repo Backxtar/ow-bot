@@ -23,6 +23,7 @@ public class HelpCmd implements CmdInterface {
                 .addField("`/tag`", "*Speichert/aktualisiert dein Tag*", true)
                 .addField("`/profile [tag]`", "*Gibt Profilinformationen aus*", true)
                 .addField("`/stats [tag]`", "*Gibt Statinformationen aus*", true)
-                .addField("`/update`", "*Gibt OW2 Updateinfos aus*", true);
+                .addField("`/update`", "*Gibt OW2 Updateinfos aus*", true)
+                .addField("`/setup`", "*Ruft das Setup auf*", true);
     }
 }

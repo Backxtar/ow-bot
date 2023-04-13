@@ -15,7 +15,7 @@ import java.util.Objects;
 
 public class StatsInteraction {
     private final ButtonInteractionEvent ctx;
-    private final String id;
+    private final String[] params;
     private String action;
     private String tag;
     private long userId = 0L;
@@ -31,14 +31,12 @@ public class StatsInteraction {
         COMPETITIVE
     }
 
-    public StatsInteraction(ButtonInteractionEvent ctx, final String id) {
+    public StatsInteraction(ButtonInteractionEvent ctx, final String[] params) {
         this.ctx = ctx;
-        this.id = id;
+        this.params = params;
     }
 
     public boolean filterAction() {
-        String[] params = this.id.split(":");
-        if (params.length != 3) return false;
         this.action = params[0];
         this.tag = params[1];
         this.userId = Long.parseLong(params[2]);
@@ -205,8 +203,8 @@ public class StatsInteraction {
         return this.ctx;
     }
 
-    public String getId() {
-        return this.id;
+    public String[] getParams() {
+        return params;
     }
 
     public String getAction() {
