@@ -1,7 +1,7 @@
 package de.backxtar.handlers;
 
 import de.backxtar.OwBot;
-import de.backxtar.commands.autoPost.SetupInteraction;
+import de.backxtar.commands.setup.SetupInteraction;
 import de.backxtar.commands.stats.StatsInteraction;
 import de.backxtar.threads.UpdateCheck;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -31,12 +31,14 @@ public class EventDistributor extends ListenerAdapter {
         final String[] params = id.split(":");
         if (params.length != 3) return;
 
-        switch (params[0].toLowerCase()) {
+        switch (params[0]) {
             case "heroes" :
             case "comTitles" :
             case "assTitles" :
             case "bestTitles" : runStats(ctx, params);
                 break;
+            case "activate" :
+            case "deactivate" :
             case "write" : runSetup(ctx, params);
                 break;
             default: ctx.deferEdit().queue();

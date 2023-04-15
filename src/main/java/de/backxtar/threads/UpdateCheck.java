@@ -51,18 +51,32 @@ public class UpdateCheck {
     }
 
     private static void sendNotification(WebCrawler webCrawler) {
-        Guild guild = OwBot.getOwBot().getShardManager().getGuildById(305020558423097345L);
-        if (guild == null) return;
-        TextChannel channel = guild.getTextChannelById(1045104915518861402L);
-        if (channel == null) return;
+        ResultSet rs = OwBot.getOwBot().getSqlManager().selectQuery("news_channels");
+        if (rs == null) return;
 
-        final EmbedHelper helper = new EmbedHelper();
-        final EmbedBuilder builder = helper.standardBuilder()
-                .setAuthor("Overwatch 2 Patchnotes - " + webCrawler.getDate(), webCrawler.getUrl(), "http://i.epvpimg.com/ZA7Dfab.png")
-                .setTitle(webCrawler.getPatchTitle(), "https://github.com/backxtar")
-                .addField(webCrawler.getSectionTitle(), webCrawler.getSectionDesc() + ".. **[LESE MEHR :link:](" + webCrawler.getUrl() + ")**", false);
+        try {
+            while (rs.next()) {
+                long guild_id = rs.getLong("guild_id");
+                long channel_id = rs.getLong("channel_id");
+                boolean active = rs.getInt("active") == 1;
 
-        channel.sendMessageEmbeds(builder.build())
-                .queue();
+                if (!active) continue;
+                Guild guild = OwBot.getOwBot().getShardManager().getGuildById(guild_id);
+                if (guild == null) continue;
+                TextChannel channel = guild.getTextChannelById(channel_id);
+                if (channel == null) continue;
+
+                final EmbedHelper helper = new EmbedHelper();
+                final EmbedBuilder builder = helper.standardBuilder()
+                        .setAuthor("Overwatch 2 Patchnotes - " + webCrawler.getDate(), webCrawler.getUrl(), "http://i.epvpimg.com/ZA7Dfab.png")
+                        .setTitle(webCrawler.getPatchTitle(), "https://github.com/backxtar")
+                        .addField(webCrawler.getSectionTitle(), webCrawler.getSectionDesc() + ".. **[LESE MEHR :link:](" + webCrawler.getUrl() + ")**", false);
+
+                channel.sendMessageEmbeds(builder.build())
+                        .queue();
+            }
+        } catch (SQLException sql) {
+            return;
+        }
     }
 }

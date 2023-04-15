@@ -6,6 +6,7 @@ import de.backxtar.formatting.EmbedHelper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,9 +38,9 @@ public class StatsInteraction {
     }
 
     public boolean filterAction() {
-        this.action = params[0];
-        this.tag = params[1];
-        this.userId = Long.parseLong(params[2]);
+        this.action = this.params[0];
+        this.tag = this.params[1];
+        this.userId = Long.parseLong(this.params[2]);
         return this.action != null && this.tag != null && this.userId != 0L;
     }
 
@@ -50,7 +51,8 @@ public class StatsInteraction {
     public void runAction() {
         final UserStats stats = Cache.getStatsByTag(this.tag);
         if (stats == null) {
-            ctx.deferEdit().queue();
+            this.ctx.editButton(ctx.getButton().asDisabled())
+                            .queue();
             return;
         }
 
@@ -87,7 +89,9 @@ public class StatsInteraction {
                                   "Das sind die **besten Stats**, die " + stats.getUsername() + " bisher erreicht hat.", 
                                   Destination.BEST).build());
 
-        this.ctx.replyEmbeds(embeds).queue();
+        this.ctx.editButton(this.ctx.getButton().asDisabled())
+                .flatMap(done -> this.ctx.getHook().getInteraction().getMessageChannel().sendMessageEmbeds(embeds))
+                .queue();
     }
 
     private EmbedBuilder buildEmbed(final UserStats stats, 

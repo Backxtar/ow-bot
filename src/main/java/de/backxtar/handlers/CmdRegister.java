@@ -6,7 +6,7 @@ import de.backxtar.commands.ProfileCmd;
 import de.backxtar.commands.stats.StatsCmd;
 import de.backxtar.commands.TagCmd;
 import de.backxtar.commands.UpdateCmd;
-import de.backxtar.commands.autoPost.SetupCmd;
+import de.backxtar.commands.setup.SetupCmd;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;

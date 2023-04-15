@@ -1,10 +1,12 @@
-package de.backxtar.commands.autoPost;
+package de.backxtar.commands.setup;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import de.backxtar.Constants;
 import de.backxtar.OwBot;
+import de.backxtar.formatting.EmbedHelper;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
@@ -23,8 +25,8 @@ public class SetupInteraction {
     }
 
     public boolean filterAction() {
-        this.action = params[0];
-        this.userId = Long.parseLong(params[2]);
+        this.action = this.params[0];
+        this.userId = Long.parseLong(this.params[2]);
         return this.action != null && this.userId != 0L;
     }
 
@@ -36,7 +38,11 @@ public class SetupInteraction {
         switch (action.toLowerCase()) {
             case "write" : overrideNewsChannel();
                 break;
-            default:
+            case "activate" : toggleNews(1);
+                break;
+            case "deactivate" : toggleNews(0);
+                break;
+            default: this.ctx.deferEdit().queue();
         }
     }
 
@@ -69,6 +75,22 @@ public class SetupInteraction {
                 .build();
 
         this.ctx.replyModal(modal)
+                .queue();
+    }
+
+    private void toggleNews(int active) {
+        EmbedHelper helper = new EmbedHelper();
+
+        final String[] param = { "active" };
+        final Object[] values = { active, this.ctx.getGuild().getIdLong() };
+        OwBot.getOwBot().getSqlManager().updateQuery(param, "news_channels", "guild_id = ?", values);
+
+        final String desc = active == 1 ? "`aktiviert`" : "`deaktiviert`";
+        EmbedBuilder builder = helper.standardBuilder()
+                .setDescription("<:yes:1085863679100198942> Die **automatischen Update-News** wurden " + desc + "!");
+
+        this.ctx.editButton(this.ctx.getButton().asDisabled())
+                .flatMap(done -> this.ctx.getHook().getInteraction().getMessageChannel().sendMessageEmbeds(builder.build()))
                 .queue();
     }
 }

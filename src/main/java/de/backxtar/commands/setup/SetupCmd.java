@@ -1,4 +1,4 @@
-package de.backxtar.commands.autoPost;
+package de.backxtar.commands.setup;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

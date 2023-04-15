@@ -1,10 +1,14 @@
 package de.backxtar.database;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Arrays;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import java.sql.*;
-import java.util.Arrays;
 
 public class SQLManager {
     private final HikariConfig config = new HikariConfig();

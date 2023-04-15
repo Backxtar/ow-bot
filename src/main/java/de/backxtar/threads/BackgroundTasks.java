@@ -1,6 +1,5 @@
 package de.backxtar.threads;
 
-import de.backxtar.threads.UpdateCheck;
 import de.backxtar.OwBot;
 import de.backxtar.api.Cache;
 
